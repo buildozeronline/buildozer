@@ -9,13 +9,8 @@ requirements = python3,kivy
 orientation = portrait
 fullscreen = 1
 android.permissions = INTERNET
-android.api = 33
-android.ndk = 25b
-android.gradle_dependencies =
-android.ndk_path =
-android.sdk_path =
+android.api = 34
 android.build_tools_version = 34.0.0
-# Diğer seçenekler varsayılan kalabilir
 
 [buildozer]
 log_level = 2
