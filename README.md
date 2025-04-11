@@ -1,0 +1,1 @@
+[![Build APK with Buildozer](https://github.com/buildozeronline/buildozer/actions/workflows/build.yml/badge.svg?event=check_run)](https://github.com/buildozeronline/buildozer/actions/workflows/build.yml)
