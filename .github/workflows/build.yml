@@ -30,15 +30,13 @@ jobs:
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
 
-          # Download command line tools
+          # Download cmdline-tools and place correctly under 'latest'
           curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-          unzip sdk-tools.zip
-          mv cmdline-tools latest
+          unzip sdk-tools.zip -d latest
 
-          # Add SDK tools to PATH
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
 
-          # Accept licenses and install required SDK packages
+          # Accept licenses and install packages
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
             "platform-tools" \
