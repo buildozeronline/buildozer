@@ -12,9 +12,10 @@ jobs:
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          buildozer_version: stable   # workdir parametresi artık gerekmez
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+          buildozer_version: stable
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v2
         with:
-          name: package
-          path: ${{ steps.buildozer.outputs.filename }}
+          name: myapp-apk
+          path: bin/*.apk   # APK dosyasının bulunduğu klasör ve yol
