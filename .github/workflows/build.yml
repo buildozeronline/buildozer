@@ -14,7 +14,7 @@ jobs:
         with:
           buildozer_version: stable   # workdir parametresi artık gerekmez
       - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: package
           path: ${{ steps.buildozer.outputs.filename }}
