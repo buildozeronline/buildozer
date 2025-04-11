@@ -13,7 +13,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install System Dependencies 2
+    - name: Install System Dependencies
       run: |
         sudo apt update
         sudo apt install -y \
@@ -49,13 +49,25 @@ jobs:
         sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
         sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec
         sed -i 's/^# *android.archs =.*/android.archs = armeabi-v7a, arm64-v8a/' buildozer.spec
-        sed -i 's/^# *android.build_tools_version =.*/android.build_tools_version = 33.0.2/' buildozer.spec
+
+        # Versiyonu açıkça ekle veya güncelle
+        if grep -q '^android.build_tools_version' buildozer.spec; then
+          sed -i 's/^android.build_tools_version = .*/android.build_tools_version = 33.0.2/' buildozer.spec
+        else
+          echo "android.build_tools_version = 33.0.2" >> buildozer.spec
+        fi
+
+    - name: Remove build-tools 36 (optional cleanup)
+      run: |
+        if [ -d "$HOME/android-sdk/build-tools/36.0.0" ]; then
+          rm -rf $HOME/android-sdk/build-tools/36.0.0
+        fi
 
     - name: Build APK
       env:
         ANDROIDSDK: $HOME/android-sdk
         ANDROID_SDK_ROOT: $HOME/android-sdk
-        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/.local/bin:/usr/bin:$PATH
+        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/build-tools/33.0.2:$HOME/android-sdk/platform-tools:$HOME/.local/bin:/usr/bin:$PATH
       run: buildozer android debug
 
     - name: Upload APK
