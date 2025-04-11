@@ -32,7 +32,7 @@ jobs:
           buildozer_version: master
 
       - name: Upload built APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: myapp-apk
           path: ${{ steps.buildozer.outputs.filename }}
