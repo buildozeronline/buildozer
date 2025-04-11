@@ -1,21 +1,22 @@
 [app]
-title = GenWallet
-package.name = myapp
-package.domain = org.lordex
+title = MyKivyApp
+package.name = mykivyapp
+package.domain = org.mykivy
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas
-version = 1.0
+source.include_exts = py,kv,png,jpg,ttf
+version = 0.1
 requirements = python3,kivy
 orientation = portrait
-fullscreen = 0
+fullscreen = 1
+android.permissions = INTERNET
 android.api = 33
 android.ndk = 25b
-android.build_tools_version = 33.0.2
-android.permissions = 
-android.arch = armeabi-v7a
+android.gradle_dependencies =
+android.ndk_path =
+android.sdk_path =
+android.build_tools_version = 34.0.0
+# Diğer seçenekler varsayılan kalabilir
 
 [buildozer]
 log_level = 2
-warn_on_root = 1
-android.accept_sdk_license = True
-android.build_tools_version = 33.0.2
+warn_on_root = 0
