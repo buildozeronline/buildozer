@@ -16,15 +16,15 @@ jobs:
     steps:
     - name: Tar Eksikse Kur
       run: |
-        sudo apt update
-        sudo apt install -y tar
+        apt update
+        apt install -y tar
 
     - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Gerekli Araçları Kur
       run: |
-        sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk wget
+        apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk wget
         pip install --upgrade pip
         pip install cython==0.29.36 buildozer
 
