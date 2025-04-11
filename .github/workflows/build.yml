@@ -22,6 +22,7 @@ jobs:
           libtool libffi-dev build-essential \
           autoconf automake cmake pkg-config \
           zlib1g-dev libncurses-dev
+        echo "/usr/bin" >> $GITHUB_PATH  # git için PATH'e ekle
 
     - name: Install Python Dependencies
       run: |
@@ -53,7 +54,7 @@ jobs:
       env:
         ANDROIDSDK: $HOME/android-sdk
         ANDROID_SDK_ROOT: $HOME/android-sdk
-        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/.local/bin:$PATH
+        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/.local/bin:/usr/bin:$PATH
       run: buildozer android debug
 
     - name: Upload APK
