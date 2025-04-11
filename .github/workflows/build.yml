@@ -1,4 +1,4 @@
-name: Build Kivy APK pEkeke
+name: Build Kivy APK
 
 on:
   push:
@@ -22,15 +22,31 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip build-essential \
-              libssl-dev libffi-dev libncurses6 libncurses5-dev libsqlite3-dev \
-              zlib1g-dev libgdbm-dev libc6-dev libbz2-dev libreadline-dev \
-              libsqlite3-dev wget liblzma-dev libegl1
+          sudo apt install -y zip unzip openjdk-17-jdk python3-pip build-essential \
+              libssl-dev libffi-dev libncurses5 libsqlite3-dev zlib1g-dev \
+              libbz2-dev libreadline-dev liblzma-dev libgdbm-dev libegl1 wget
+
+      - name: Install Android SDK + Accept Licenses
+        run: |
+          mkdir -p "$HOME/android-sdk"
+          cd "$HOME/android-sdk"
+          wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O tools.zip
+          unzip tools.zip -d cmdline-tools
+          mv cmdline-tools cmdline-tools/latest
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+          yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses
+          sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Install Buildozer
         run: |
           pip install --upgrade pip
           pip install buildozer cython virtualenv
+
+      - name: Set Environment Paths
+        run: |
+          echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$HOME/android-sdk/platform-tools:$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
       - name: Create buildozer.spec if not exists
         run: |
@@ -40,6 +56,8 @@ jobs:
 
       - name: Build APK
         run: |
+          export ANDROIDSDK=$HOME/android-sdk
+          export PATH=$ANDROIDSDK/platform-tools:$ANDROIDSDK/cmdline-tools/latest/bin:$PATH:$PATH
           buildozer android debug
 
       - name: Upload APK
