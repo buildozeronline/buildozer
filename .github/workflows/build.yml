@@ -11,46 +11,44 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  
+        uses: actions/checkout@v3
 
-      - name: Install Python Dependencies
+      - name: Install system dependencies
         run: |
-          pip install --upgrade pip
-          pip install cython==0.29.36 buildozer  
+          sudo apt-get update
+          sudo apt-get install -y libncurses5 libstdc++6 zlib1g zlib1g-dev openjdk-11-jdk unzip
+
+      - name: Set up Python and Install Buildozer
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install Cython==0.29.36 buildozer
 
       - name: Download and Setup Android SDK
+        env:
+          ANDROID_SDK_ROOT: $HOME/android-sdk
         run: |
-          # Create directories for Android SDK
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-
-          # Download SDK tools
-          curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-          unzip cmdline-tools.zip
-          mkdir -p latest && mv cmdline-tools/* latest/
-
-          # Accept all licenses
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-
-          # Install required SDK packages
-          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;36.0.0" "system-images;android-33;google_apis;x86_64"
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          cd $ANDROID_SDK_ROOT/cmdline-tools
+          curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+          unzip sdk-tools.zip -d latest
+          
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.1.8937393"
 
       - name: Ensure buildozer.spec
         run: |
           if [ ! -f buildozer.spec ]; then buildozer init; fi
           sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
-          sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec  
+          sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec
+          sed -i 's|^# android.ndk_path = .*|android.ndk_path = $HOME/.buildozer/android/platform/android-ndk-r25b|' buildozer.spec
 
       - name: Build APK
         env:
           ANDROIDSDK: $HOME/android-sdk
           ANDROID_SDK_ROOT: $HOME/android-sdk
+          JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
           PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
         run: |
-          # Accept the SDK licenses again
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-
-          # Build the APK using Buildozer
           buildozer android debug
 
       - name: Upload APK
