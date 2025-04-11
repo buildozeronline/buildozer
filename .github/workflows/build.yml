@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK with Buildozer
 
 on:
   push:
@@ -10,24 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Repo'yu klonla
-      uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-    - name: Gereksinimleri yükle
+    - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk libncurses5 libstdc++6
         pip install --upgrade pip
         pip install cython==0.29.36
         pip install buildozer
-        pip install "kivy[base]"==2.2.1
 
-    - name: APK oluştur
+    - name: Build APK
       run: |
+        buildozer init
+        sed -i 's/package.name = .*/package.name = myapp/' buildozer.spec
+        sed -i 's/package.domain = .*/package.domain = org.test/' buildozer.spec
         buildozer android debug
 
-    - name: APK dosyasını yükle
-      uses: actions/upload-artifact@v2
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
       with:
-        name: my-app
+        name: myapp-apk
         path: bin/*.apk
