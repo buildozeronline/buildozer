@@ -1,70 +1,20 @@
-name: Build APK with Buildozer
-
+name: Build APK
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y zlib1g zlib1g-dev libstdc++6 openjdk-11-jdk unzip curl
-
-      - name: Set up Python and Install Buildozer
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install Cython==0.29.36 buildozer
-
-      - name: Download and Setup Android SDK
-        env:
-          ANDROID_SDK_ROOT: $HOME/android-sdk
-        run: |
-          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-          cd $ANDROID_SDK_ROOT/cmdline-tools
-
-          # Download cmdline-tools and place correctly under 'latest'
-          curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-          unzip sdk-tools.zip -d latest
-
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-
-          # Accept licenses and install packages
-          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;33.0.2" \
-            "ndk;25.1.8937393"
-
-      - name: Ensure buildozer.spec
-        run: |
-          if [ ! -f buildozer.spec ]; then buildozer init; fi
-          sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
-          sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec
-          sed -i 's|^# android.ndk_path =.*|android.ndk_path = $HOME/.buildozer/android/platform/android-ndk-r25b|' buildozer.spec
-          sed -i 's|^# android.sdk_path =.*|android.sdk_path = $HOME/android-sdk|' buildozer.spec
-          sed -i 's|^# android.api =.*|android.api = 33|' buildozer.spec
-          sed -i 's|^# android.build_tools_version =.*|android.build_tools_version = 33.0.2|' buildozer.spec
-
-      - name: Build APK
-        env:
-          ANDROIDSDK: $HOME/android-sdk
-          ANDROID_SDK_ROOT: $HOME/android-sdk
-          JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
-          PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
-        run: |
-          buildozer android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v2
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          name: myapp-apk
-          path: bin/*.apk
+          buildozer_version: stable   # workdir parametresi artık gerekmez
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: package
+          path: ${{ steps.buildozer.outputs.filename }}
