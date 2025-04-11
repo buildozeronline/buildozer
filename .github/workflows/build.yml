@@ -16,8 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk libncurses5 libstdc++6
-        pip install --upgrade pip
+        sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk libncurses6 libstdc++6
         pip install cython==0.29.36
         pip install buildozer
 
