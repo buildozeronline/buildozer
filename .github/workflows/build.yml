@@ -1,60 +1,61 @@
 name: Build APK with Buildozer
 
 on:
-  push:
-    branches:
-      - main
+push:
+branches:
+- main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+build:
+runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+steps:  
+- name: Checkout repository  
+  uses: actions/checkout@v3  
 
-    - name: Install Python Dependencies
-      run: |
-        pip install --upgrade pip
-        pip install cython==0.29.36 buildozer
+- name: Install Python Dependencies  
+  run: |  
+    pip install --upgrade pip  
+    pip install cython==0.29.36 buildozer  
 
-    - name: Download and Setup Android SDK
-      run: |
-        # Create directories for Android SDK
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        cd $HOME/android-sdk/cmdline-tools
+- name: Download and Setup Android SDK  
+  run: |  
+    # Create directories for Android SDK  
+    mkdir -p $HOME/android-sdk/cmdline-tools  
+    cd $HOME/android-sdk/cmdline-tools  
 
-        # Download SDK tools
-        curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-        unzip cmdline-tools.zip
-        mkdir -p latest && mv cmdline-tools/* latest/
+    # Download SDK tools  
+    curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip  
+    unzip cmdline-tools.zip  
+    mkdir -p latest && mv cmdline-tools/* latest/  
 
-        # Accept all licenses
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+    # Accept all licenses  
+    yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses  
 
-        # Install required SDK packages
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;36.0.0" "system-images;android-33;google_apis;x86_64"
+    # Install required SDK packages  
+    $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;36.0.0" "system-images;android-33;google_apis;x86_64"  
 
-    - name: Ensure buildozer.spec
-      run: |
-        if [ ! -f buildozer.spec ]; then buildozer init; fi
-        sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
-        sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec
+- name: Ensure buildozer.spec  
+  run: |  
+    if [ ! -f buildozer.spec ]; then buildozer init; fi  
+    sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec  
+    sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec  
 
-    - name: Build APK
-      env:
-        ANDROIDSDK: $HOME/android-sdk
-        ANDROID_SDK_ROOT: $HOME/android-sdk
-        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
-      run: |
-        # Accept the SDK licenses again
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+- name: Build APK  
+  env:  
+    ANDROIDSDK: $HOME/android-sdk  
+    ANDROID_SDK_ROOT: $HOME/android-sdk  
+    PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH  
+  run: |  
+    # Accept the SDK licenses again  
+    yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses  
 
-        # Build the APK using Buildozer
-        buildozer android debug
+    # Build the APK using Buildozer  
+    buildozer android debug  
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: myapp-apk
-        path: bin/*.apk
+- name: Upload APK  
+  uses: actions/upload-artifact@v4  
+  with:  
+    name: myapp-apk  
+    path: bin/*.apk
+
