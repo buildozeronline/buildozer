@@ -1,40 +1,40 @@
-name: Build Kivy APK
+name: Build Kivy Android APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Kodları çek
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Gerekli paketleri kur
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk libncurses6 libstdc++6
-          python3 -m pip install --upgrade pip
+          sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk libncurses5 libstdc++6
+          pip install --upgrade pip
           pip install cython==0.29.36
           pip install buildozer
           pip install "kivy[base]"==2.2.1
 
-      - name: Sadece eksikse buildozer.spec oluştur
+      - name: Build APK
         run: |
           if [ ! -f buildozer.spec ]; then
             buildozer init
-          else
-            echo "buildozer.spec zaten mevcut, geçildi."
           fi
+          buildozer android debug
 
-      - name: APK oluştur
-        run: buildozer android debug
-
-      - name: APK çıktısını yedekle
-        uses: actions/upload-artifact@v2
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
         with:
-          name: my-kivy-app
+          name: kivy-app
           path: bin/*.apk
