@@ -1,11 +1,6 @@
 name: 'Kivy App to APK'
 description: 'Convert Kivy app to APK'
 
-on:
-  push:
-    branches:
-      - main  # Ana dalda bir değişiklik olduğunda tetiklenir
-
 inputs:
   python-version:
     description: 'Python version to use'
@@ -17,13 +12,29 @@ inputs:
     default: 'buildozer android debug'
     description: 'Buildozer command to use'
 
+branding:
+  color: 'green'
+  icon: 'play'
+
 runs:
   using: "composite"
   steps:
     - name: Setup python
       uses: actions/setup-python@v5
       with:
+        architecture: x64
         python-version: ${{ inputs.python-version }}
+
+    - name: Setup Java 17 required by Gradle
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'  # or 'zulu','liberica', etc.
+        java-version: '17'
+
+    - name: Set JAVA_HOME
+      run: |
+        echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+      shell: bash
 
     - name: Prepare virtual environment
       run: |
@@ -32,18 +43,25 @@ runs:
         echo "Using Python==$(python --version)"
       shell: bash
 
-    - name: Install dependencies
+    - name: Install and upgrade dependencies
       run: |
         sudo apt update
-        sudo apt install -y \
-          git \
+        sudo apt install -y git \
+          zip \
+          unzip \
           openjdk-17-jdk \
           python3-pip \
+          autoconf \
+          libtool \
+          pkg-config \
+          zlib1g-dev \
           libncurses5-dev \
           libncursesw5-dev \
-          zlib1g-dev \
+          libtinfo5 \
+          cmake \
           libffi-dev \
           libssl-dev
+        export PATH=$PATH:~/.local/bin/
         python3 -m pip install --upgrade \
           Cython==0.29.33 \
           buildozer
@@ -58,6 +76,5 @@ runs:
 
     - name: Build with Buildozer
       run: |
-        cd ${{ inputs.work-dir }}
         ${{ inputs.buildozer-cmd }}
       shell: bash
