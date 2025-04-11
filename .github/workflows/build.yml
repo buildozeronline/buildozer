@@ -9,49 +9,39 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      ANDROID_SDK_ROOT: $HOME/android-sdk
-      PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
-
     steps:
-    - name: Tar Eksikse Kur
-      run: |
-        apt update
-        apt install -y tar
-
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Gerekli Araçları Kur
+    - name: Install Python Dependencies
       run: |
-        apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk wget
         pip install --upgrade pip
         pip install cython==0.29.36 buildozer
 
-    - name: Android SDK Kurulumu
+    - name: Download and Setup Android SDK
       run: |
-        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-        cd $ANDROID_SDK_ROOT/cmdline-tools
-        wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
+        curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
         unzip cmdline-tools.zip
         mkdir -p latest && mv cmdline-tools/* latest/
+        echo "y" | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses || true
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-        yes | sdkmanager --licenses || true
-        sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-
-    - name: buildozer.spec Ayarı
+    - name: Ensure buildozer.spec
       run: |
-        if [ ! -f buildozer.spec ]; then
-          buildozer init
-        fi
+        if [ ! -f buildozer.spec ]; then buildozer init; fi
         sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
         sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec
-        sed -i '/^#*android.accept_sdk_license/s/^#*/ /;s/=.*/= True/' buildozer.spec
 
-    - name: APK Oluştur
+    - name: Build APK
+      env:
+        ANDROIDSDK: $HOME/android-sdk
+        ANDROID_SDK_ROOT: $HOME/android-sdk
+        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
       run: buildozer android debug
 
-    - name: APK'yi Yükle
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: myapp-apk
