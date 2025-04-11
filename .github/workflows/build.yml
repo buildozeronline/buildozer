@@ -17,25 +17,25 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Gereklilikleri Kur
+    - name: Gerekli Araçları Kur
       run: |
         sudo apt update
-        sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk libncurses6 libstdc++6 wget
+        sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk tar wget
         pip install --upgrade pip
-        pip install cython==0.29.36
-        pip install buildozer
+        pip install cython==0.29.36 buildozer
 
+    - name: Android SDK Kurulumu
+      run: |
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
         cd $ANDROID_SDK_ROOT/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
         unzip cmdline-tools.zip
-        mkdir -p latest
-        mv cmdline-tools/* latest/
+        mkdir -p latest && mv cmdline-tools/* latest/
 
         yes | sdkmanager --licenses || true
         sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-    - name: Ensure buildozer.spec exists
+    - name: Buildozer Ayar Dosyasını Hazırla
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
@@ -45,10 +45,9 @@ jobs:
         sed -i '/^#*android.accept_sdk_license/s/^#*/ /;s/=.*/= True/' buildozer.spec
 
     - name: APK Oluştur
-      run: |
-        buildozer android debug
+      run: buildozer android debug
 
-    - name: APK Yükle
+    - name: APK'yi Yükle
       uses: actions/upload-artifact@v4
       with:
         name: myapp-apk
