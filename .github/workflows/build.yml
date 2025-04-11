@@ -21,11 +21,16 @@ jobs:
         pip install cython==0.29.36
         pip install buildozer
 
+    - name: Ensure buildozer.spec exists
+      run: |
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
+        sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
+        sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec
+
     - name: Build APK
       run: |
-        buildozer init
-        sed -i 's/package.name = .*/package.name = myapp/' buildozer.spec
-        sed -i 's/package.domain = .*/package.domain = org.test/' buildozer.spec
         buildozer android debug
 
     - name: Upload APK
