@@ -1,21 +1,66 @@
-name: Build APK
-on:
-  push:
-    branches: [ main ]
+name: 'Kivy App to APK'
+description: 'Convert Kivy app to APK'
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          buildozer_version: stable
+inputs:
+  python-version:
+    description: 'Python version to use'
+    default: '3.8'
+  work-dir:
+    default: '.'
+    description: 'Working directory'
+  buildozer-cmd:
+    default: 'buildozer android debug'
+    description: 'Buildozer command to use'
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: myapp-apk
-          path: bin/*.apk   # APK dosyasının bulunduğu klasör ve yol
+runs:
+  using: "composite"
+  steps:
+    - name: Clean up previous builds
+      run: |
+        echo "Cleaning up previous builds..."
+        rm -rf ${{ github.workspace }}/.buildozer
+        rm -rf ${{ github.workspace }}/build
+        rm -rf ${{ github.workspace }}/.venv
+      shell: bash
+
+    - name: Setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Prepare virtual environment
+      run: |
+        python3 -m venv venv
+        source venv/bin/activate
+        echo "Using Python==$(python --version)"
+      shell: bash
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          git \
+          openjdk-17-jdk \
+          python3-pip \
+          libncurses5-dev \
+          libncursesw5-dev \
+          zlib1g-dev \
+          libffi-dev \
+          libssl-dev
+        python3 -m pip install --upgrade \
+          Cython==0.29.33 \
+          buildozer
+      shell: bash
+
+    - name: Install requirements in requirements.txt if it exists
+      run: |
+        if [ -f requirements.txt ]; then
+          python3 -m pip install -r requirements.txt
+        fi
+      shell: bash
+
+    - name: Build with Buildozer
+      run: |
+        cd ${{ inputs.work-dir }}
+        ${{ inputs.buildozer-cmd }}
+      shell: bash
