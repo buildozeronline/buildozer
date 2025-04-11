@@ -29,10 +29,17 @@ jobs:
         run: |
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           cd $ANDROID_SDK_ROOT/cmdline-tools
+
+          # Download command line tools
           curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-          unzip sdk-tools.zip -d latest
-          
-          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+          unzip sdk-tools.zip
+          mv cmdline-tools latest
+
+          # Add SDK tools to PATH
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+
+          # Accept licenses and install required SDK packages
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
           $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
             "platform-tools" \
             "platforms;android-33" \
@@ -44,7 +51,10 @@ jobs:
           if [ ! -f buildozer.spec ]; then buildozer init; fi
           sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
           sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec
-          sed -i 's|^# android.ndk_path = .*|android.ndk_path = $HOME/.buildozer/android/platform/android-ndk-r25b|' buildozer.spec
+          sed -i 's|^# android.ndk_path =.*|android.ndk_path = $HOME/.buildozer/android/platform/android-ndk-r25b|' buildozer.spec
+          sed -i 's|^# android.sdk_path =.*|android.sdk_path = $HOME/android-sdk|' buildozer.spec
+          sed -i 's|^# android.api =.*|android.api = 33|' buildozer.spec
+          sed -i 's|^# android.build_tools_version =.*|android.build_tools_version = 33.0.2|' buildozer.spec
 
       - name: Build APK
         env:
