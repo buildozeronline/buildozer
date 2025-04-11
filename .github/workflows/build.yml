@@ -1,4 +1,4 @@
-name: Build APK with Buildozerr
+name: Build APK with Buildozer
 
 on:
   push:
@@ -13,63 +13,45 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Install System Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y \
-          git zip unzip openjdk-17-jdk \
-          python3-pip python3-setuptools \
-          libtool libffi-dev build-essential \
-          autoconf automake cmake pkg-config \
-          zlib1g-dev libncurses-dev
-        echo "/usr/bin" >> $GITHUB_PATH  # git için PATH'e ekle
-
     - name: Install Python Dependencies
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install cython==0.29.36 buildozer
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        pip install --upgrade pip
+        pip install cython==0.29.36 buildozer
 
     - name: Download and Setup Android SDK
       run: |
+        # Create directories for Android SDK
         mkdir -p $HOME/android-sdk/cmdline-tools
         cd $HOME/android-sdk/cmdline-tools
+
+        # Download SDK tools
         curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
         unzip cmdline-tools.zip
         mkdir -p latest && mv cmdline-tools/* latest/
-        
-        # Otomatik olarak lisansları kabul et
-        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses || true
-        
-        # SDK bileşenlerini yükle
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+        # Accept all licenses
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+
+        # Install required SDK packages
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;36.0.0" "system-images;android-33;google_apis;x86_64"
 
     - name: Ensure buildozer.spec
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
         sed -i 's/^package.name = .*/package.name = myapp/' buildozer.spec
         sed -i 's/^package.domain = .*/package.domain = org.test/' buildozer.spec
-        sed -i 's/^# *android.archs =.*/android.archs = armeabi-v7a, arm64-v8a/' buildozer.spec
-
-        # Versiyonu açıkça ekle veya güncelle
-        if grep -q '^android.build_tools_version' buildozer.spec; then
-          sed -i 's/^android.build_tools_version = .*/android.build_tools_version = 33.0.2/' buildozer.spec
-        else
-          echo "android.build_tools_version = 33.0.2" >> buildozer.spec
-        fi
-
-    - name: Remove build-tools 36 (optional cleanup)
-      run: |
-        if [ -d "$HOME/android-sdk/build-tools/36.0.0" ]; then
-          rm -rf $HOME/android-sdk/build-tools/36.0.0
-        fi
 
     - name: Build APK
       env:
         ANDROIDSDK: $HOME/android-sdk
         ANDROID_SDK_ROOT: $HOME/android-sdk
-        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/build-tools/33.0.2:$HOME/android-sdk/platform-tools:$HOME/.local/bin:/usr/bin:$PATH
-      run: buildozer android debug
+        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
+      run: |
+        # Accept the SDK licenses again
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+
+        # Build the APK using Buildozer
+        buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
