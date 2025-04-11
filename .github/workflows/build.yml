@@ -14,13 +14,17 @@ jobs:
       PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
 
     steps:
+    - name: Tar Eksikse Kur
+      run: |
+        sudo apt update
+        sudo apt install -y tar
+
     - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Gerekli Araçları Kur
       run: |
-        sudo apt update
-        sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk tar wget
+        sudo apt install -y python3-pip build-essential git zip unzip openjdk-17-jdk wget
         pip install --upgrade pip
         pip install cython==0.29.36 buildozer
 
@@ -35,7 +39,7 @@ jobs:
         yes | sdkmanager --licenses || true
         sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-    - name: Buildozer Ayar Dosyasını Hazırla
+    - name: buildozer.spec Ayarı
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
