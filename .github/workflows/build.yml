@@ -37,11 +37,12 @@ jobs:
         curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
         unzip cmdline-tools.zip
         mkdir -p latest && mv cmdline-tools/* latest/
+        
+        # Otomatik olarak lisansları kabul et
         yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses || true
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
-          "platform-tools" \
-          "platforms;android-33" \
-          "build-tools;33.0.2"
+        
+        # SDK bileşenlerini yükle
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
     - name: Ensure buildozer.spec
       run: |
