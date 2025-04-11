@@ -15,8 +15,9 @@ jobs:
 
     - name: Install Python Dependencies
       run: |
-        pip install --upgrade pip
-        pip install cython==0.29.36 buildozer
+        python3 -m pip install --upgrade pip
+        python3 -m pip install cython==0.29.36 buildozer
+        echo "$HOME/.local/bin" >> $GITHUB_PATH  # Buildozer için PATH'e ekle
 
     - name: Download and Setup Android SDK
       run: |
@@ -25,7 +26,7 @@ jobs:
         curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
         unzip cmdline-tools.zip
         mkdir -p latest && mv cmdline-tools/* latest/
-        echo "y" | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses || true
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses || true
         $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
     - name: Ensure buildozer.spec
@@ -38,7 +39,7 @@ jobs:
       env:
         ANDROIDSDK: $HOME/android-sdk
         ANDROID_SDK_ROOT: $HOME/android-sdk
-        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$PATH
+        PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/.local/bin:$PATH
       run: buildozer android debug
 
     - name: Upload APK
